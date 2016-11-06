@@ -1,0 +1,20 @@
+{
+  "name": "webaudio-handson",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "browserify ./src/main.js -o ./dist/main.js",
+    "dev": "watchify ./src/main.js -o ./dist/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "mobx": "^2.6.1"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.1",
+    "watchify": "^3.7.0"
+  }
+}
