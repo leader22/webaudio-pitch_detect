@@ -1,14 +1,13 @@
 {
-  "name": "webaudio-handson",
+  "name": "webaudio-pitch_detect",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "build": "browserify ./src/main.js -o ./dist/main.js",
     "dev": "watchify ./src/main.js -o ./dist/main.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "leader22",
   "license": "MIT",
   "dependencies": {
     "mobx": "^2.6.1"
