@@ -57,26 +57,33 @@ const util = {
     return Math.floor(1200 * Math.log(frequency / baseFreq) / Math.log(2));
   },
 
+  /**
+   * AnalyzerNodeから取ったTimeDomainデータから、周波数を割り出す
+   *
+   * @param {Array} buf
+   * @param {number} SAMPLE_RATE
+   * @return {number}
+   *
+   */
   getFrequencyByBuffer(buf, SAMPLE_RATE) {
-    const SIZE = buf.length;
-    const MAX_SAMPLES = SIZE / 2;
-
+    // 一定量以上の入力がないと無視するように
+    // 低周波数だと音量がないせいで無音扱いになることもある
     let rms = 0;
-    for (let i = 0; i < SIZE; i++) {
+    for (let i = 0; i < buf.length; i++) {
       let val = buf[i];
       rms += val * val;
     }
-    rms = Math.sqrt(rms / SIZE);
-    // not enough signal
-    if (rms < 0.01) {
-      return -1;
-    }
+    rms = Math.sqrt(rms / buf.length);
+    // 200Hzくらいは拾う
+    if (rms < 0.001) { return -1; }
 
+
+    const MAX_SAMPLES = buf.length / 2;
     let lastCorrelation = 1;
-    let best_offset = -1;
-    let best_correlation = 0;
+    let bestOffset      = -1;
+    let bestCorrelation = 0;
     let foundGoodCorrelation = false;
-    let correlations = [];
+    const correlations = [];
 
     for (let offset = 0; offset < MAX_SAMPLES; offset++) {
       let correlation = 0;
@@ -84,22 +91,23 @@ const util = {
       for (let i = 0; i < MAX_SAMPLES; i++) {
         correlation += Math.abs((buf[i]) - (buf[i + offset]));
       }
-      correlation = 1 - (correlation/MAX_SAMPLES);
-      correlations[offset] = correlation; // store it, for the tweaking we need to do below.
+      correlation = 1 - (correlation / MAX_SAMPLES);
+      correlations[offset] = correlation;
+
+      // 9割超えで決定
       if ((correlation > 0.9) && (correlation > lastCorrelation)) {
         foundGoodCorrelation = true;
-        if (correlation > best_correlation) {
-          best_correlation = correlation;
-          best_offset = offset;
+        if (correlation > bestCorrelation) {
+          bestCorrelation = correlation;
+          bestOffset = offset;
         }
-      } else if (foundGoodCorrelation) {
-        let shift = (correlations[best_offset + 1] - correlations[best_offset - 1]) / correlations[best_offset];
-        return SAMPLE_RATE / (best_offset + (8 * shift));
       }
+      else if (foundGoodCorrelation) {
+        let shift = (correlations[bestOffset + 1] - correlations[bestOffset - 1]) / correlations[bestOffset];
+        return SAMPLE_RATE / (bestOffset + (8 * shift));
+      }
+
       lastCorrelation = correlation;
-    }
-    if (best_correlation > 0.01) {
-      return SAMPLE_RATE / best_offset;
     }
 
     return -1;
