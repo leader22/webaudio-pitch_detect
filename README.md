@@ -1,2 +1,8 @@
 # Pitch detector by WebAudio
-wip
+
+```sh
+npm i
+npm run build
+
+# then, create web server and host index.html
+```
