@@ -5,22 +5,21 @@ const View  = require('./view');
 
 
 class PitchDetector {
-  constructor(size) {
-    this.store = new Store();
-    this.view  = new View(document);
-
-    this.micStream = null;
-
-    this.audioCtx = new AudioContext();
+  constructor(options) {
+    this.audioCtx = options.audioCtx;
     this.audioNode = {
       source:   null,
       analyser: this.audioCtx.createAnalyser(),
     };
-    this.buffer = new Float32Array(size);
+    this.buffer = new Float32Array(options.size);
 
-    this.timer = null;
+    this.micStream = null;
+    this.timer     = null;
 
-    this.detectPitch = this.detectPitch.bind(this);
+    this.store = new Store();
+    this.view  = new View(document);
+
+    this._detectPitch = this._detectPitch.bind(this);
 
     autorun(() => { this.view.render(this.store); });
   }
@@ -32,7 +31,7 @@ class PitchDetector {
         this.audioNode.source = this.audioCtx.createMediaStreamSource(stream);
         this.audioNode.source.connect(this.audioNode.analyser);
 
-        this.detectPitch();
+        this._detectPitch();
       })
       .catch((err) => { console.error(err); });
   }
@@ -46,11 +45,11 @@ class PitchDetector {
     this.micStream = this.audioNode.source = this.timer = null;
   }
 
-  detectPitch() {
+  _detectPitch() {
     this.audioNode.analyser.getFloatTimeDomainData(this.buffer);
     this.store.update(util.getFrequencyByBuffer(this.buffer, this.audioCtx.sampleRate));
 
-    this.timer = requestAnimationFrame(this.detectPitch);
+    this.timer = requestAnimationFrame(this._detectPitch);
   }
 }
 
